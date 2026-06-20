@@ -1,0 +1,2 @@
+"""SmartBuy AI domain modules."""
+
