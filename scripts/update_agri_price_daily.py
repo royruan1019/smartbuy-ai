@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import sys
+import os
 import tomllib
 
 from sqlalchemy import create_engine, text
@@ -23,16 +24,26 @@ from src.data.fetch_agri_prices import fetch_agri_prices  # noqa: E402
 
 def load_database_url() -> str:
     """
-    從 .streamlit/secrets.toml 讀取 DATABASE_URL。
+    讀取 DATABASE_URL。
+
+    優先順序：
+    1. GitHub Actions / 雲端環境變數 DATABASE_URL
+    2. 本機 .streamlit/secrets.toml
 
     注意：
     .streamlit/secrets.toml 不可以 commit 到 GitHub。
     """
+    env_database_url = os.getenv("DATABASE_URL")
+
+    if env_database_url:
+        return env_database_url
+
     secrets_path = PROJECT_ROOT / ".streamlit" / "secrets.toml"
 
     if not secrets_path.exists():
         raise FileNotFoundError(
-            "找不到 .streamlit/secrets.toml，請先建立 DATABASE_URL。"
+            "找不到 DATABASE_URL。請設定環境變數 DATABASE_URL，"
+            "或建立 .streamlit/secrets.toml。"
         )
 
     with secrets_path.open("rb") as file:

@@ -1,0 +1,34 @@
+name: Daily Agri Price Update
+
+on:
+  schedule:
+    # 台灣時間約每天中午 12:30 執行
+    # GitHub Actions 使用 UTC，所以 04:30 UTC = 台灣 12:30
+    - cron: "30 4 * * *"
+
+  workflow_dispatch:
+
+jobs:
+  update-agri-price:
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run agri price update
+        run: |
+          python scripts/update_agri_price_daily.py
