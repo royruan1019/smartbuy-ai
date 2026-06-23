@@ -891,5 +891,33 @@
     "dev_log": "docs/dev_logs/TASK-D05A_log.md",
     "tutorial_doc": "docs/tutorials/TASK-D05A_tutorial.md",
     "handoff_note": "docs/handoff/TASK-D05A_handoff.md"
+  },
+  {
+    "task_id": "TASK-D06",
+    "title": "ML 訓練與預測產生流程",
+    "status": "已完成",
+    "owner": "C 資料工程 / D 菜價分析",
+    "worker_type": "AI Agent",
+    "priority": "高",
+    "module": "anomaly",
+    "related_files": [
+      "src/ml/baseline_predictor.py",
+      "scripts/generate_baseline_predictions.py",
+      "tests/test_baseline_predictor.py",
+      "tests/test_generate_baseline_predictions.py"
+    ],
+    "goal": "建立農產品未來價格 Baseline 預測腳本與排程，實踐歷史行情分析、漲跌預警狀態研判，並寫回資料庫。",
+    "done_definition": [
+      "建立 src/ml/baseline_predictor.py 處理價格 MA7 與 MA30 移動平均與狀態分類",
+      "建立 scripts/generate_baseline_predictions.py 支援 CLI 單一與 Top-N 預測批次執行",
+      "腳本預測日期從今日開始且大於等於今日，防範過期日期",
+      "有效歷史交易小於 7 筆時優雅跳過警告，7~29 筆用全平均，30 筆以上用 MA30",
+      "預測結果成功 Upsert 寫入 Supabase 'prediction_results' 表，data_update_logs 失敗不阻礙主流程",
+      "編寫自動化測試，Mock 資料庫寫入，保證測試不隨日期變動失效",
+      "手動驗證前台 Streamlit 能正確展示模型生成的未來價格預測與漲跌趨勢"
+    ],
+    "dev_log": "docs/dev_logs/TASK-D06_log.md",
+    "tutorial_doc": "docs/tutorials/TASK-D06_tutorial.md",
+    "handoff_note": "docs/handoff/TASK-D06_handoff.md"
   }
 ]
