@@ -18,6 +18,11 @@
 - **表 `prediction_results`** (新增預測寫回表):
   - **主鍵與約束**: 複合唯一約束 `UNIQUE (predict_date, crop_code, market_code)`。
   - **欄位**: `id`, `predict_date`, `crop_code`, `crop_name`, `market_code`, `market_name`, `predicted_price`, `predicted_status`, `created_at`。
+- **統一價格存取層 (`price_repository.py`)**:
+  - **Fallback 機制**: 僅在資料庫連線失敗、例外或初始加載無資料時 fallback 到 CSV。若查詢成功但為 0 筆結果，直接回傳空 DataFrame，前台顯示「查無資料」。
+  - **資料來源一致性**: 藉由 pandas 的 `df.attrs["source"]` 回傳實際查詢來源，避開 Streamlit 重新整理所導致的狀態不一致。
+  - **欄位對齊**: 標準化輸出 DataFrame，同時對齊 `crop_name` 與 `product_name`（資料一致），確保前台與預警系統相容。
+  - **防範 SQL 注入**: 採用參數化 SQL 查詢。
 
 ### 2. Parquet 本機儲存層 (ML 數據湖)
 - **儲存目錄**: `data/history_parquet/`。

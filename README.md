@@ -27,6 +27,7 @@ pytest -q
    - **定位**: 作為線上 App 即時查詢與每日行情更新之用。
    - **容量與限制**: 由於 Supabase 免費版資料庫容量限制為 500 MB，不適合存放全台數年、每日且涵蓋數千品項與市場的原始交易紀錄。
    - **生命週期**: 線上資料庫僅保留最近 **1～3 個月** 的交易資料（由每日更新腳本自動修剪），以確保輕量化、查詢高效與不超額。
+   - **統一資料存取層 (price_repository.py)**: 線上頁面（如價格搜尋頁）透過 [price_repository.py](file:///d:/AI人工智慧/專題/smartbuy-ai/src/data/price_repository.py) 進行查詢。該資料層實作了「Supabase 優先、本機 CSV 備援」機制：僅在資料庫連線出錯、例外或初始資料集為空時執行 fallback。若資料庫可連線但查詢結果為空（0 筆），則正常顯示「查無資料」，不進行 fallback。回傳的 DataFrame 會統一將 `crop_name` 與 `product_name` 標準化對齊，並在 `df.attrs["source"]` 中附帶實際資料來源標記。
 
 2. **本機 Parquet 檔案 (ML 數據湖 - Data Lake)**:
    - **定位**: 專為機器學習模型訓練提供的高壓縮比、欄位導向 (Column-oriented) 歷史數據儲存層。
