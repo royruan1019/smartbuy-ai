@@ -791,5 +791,31 @@
     "dev_log": "docs/dev_logs/TASK-D02_log.md",
     "tutorial_doc": "docs/tutorials/TASK-D02_tutorial.md",
     "handoff_note": "docs/handoff/TASK-D02_handoff.md"
+  },
+  {
+    "task_id": "TASK-D03",
+    "title": "將首頁與採買推薦切換為 Supabase 優先",
+    "status": "已完成",
+    "owner": "C 資料工程 / D 菜價分析",
+    "worker_type": "AI Agent",
+    "priority": "高",
+    "module": "data",
+    "related_files": [
+      "app/home_view.py",
+      "app/pages/01_home.py",
+      "src/recommendation/purchase_advisor.py"
+    ],
+    "goal": "建立首頁與採買推薦的 Supabase 優先資料來源切換，並處理多頁面路徑與欄位相容性。",
+    "done_definition": [
+      "首頁資料載入切換為呼叫 price_repository.load_price_history(days=90)",
+      "首頁顯示當前資料來源 (Supabase 或 本機 CSV 備援)",
+      "首頁顯示最新交易日期",
+      "確保傳入採買推薦模組的欄位同時相容 crop_name 與 product_name",
+      "修復首頁入口的 sys.path 多頁面導入問題",
+      "編寫或更新單元測試並通過全專案測試"
+    ],
+    "dev_log": "docs/dev_logs/TASK-D03_log.md",
+    "tutorial_doc": "docs/tutorials/TASK-D03_tutorial.md",
+    "handoff_note": "docs/handoff/TASK-D03_handoff.md"
   }
 ]
