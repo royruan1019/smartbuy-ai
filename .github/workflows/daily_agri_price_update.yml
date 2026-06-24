@@ -4,7 +4,7 @@ run-name: Daily Agri Price Update
 
 on:
   schedule:
-    - cron: "50 9 * * *"
+    - cron: "30 12 * * *"
       timezone: "Asia/Taipei"
 
   workflow_dispatch:
