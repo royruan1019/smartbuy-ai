@@ -87,8 +87,8 @@ def test_db_query_success_with_sqlite_mock(monkeypatch):
     assert len(df_keyword) == 1
     assert df_keyword.iloc[0]["crop_name"] == "小白菜"
 
-    # 4. 測試 load_price_history 歷史價格載入
-    df_history = repo.load_price_history(crop_name="高麗菜", days=5)
+    # 4. 測試 load_price_history 歷史價格載入 (傳入 reference_date 避免測試依賴真實系統日期)
+    df_history = repo.load_price_history(crop_name="高麗菜", days=5, reference_date=date(2026, 6, 24))
     assert len(df_history) == 2  # 應有 6-19 與 6-20 兩筆
     assert df_history.attrs["source"] == "Supabase"
 

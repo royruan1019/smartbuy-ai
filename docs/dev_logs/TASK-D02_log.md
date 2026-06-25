@@ -7,17 +7,17 @@
 ## 2. 執行資訊
 
 - 執行者：Antigravity
-- 產生時間：2026-06-23T11:31:20+08:00
+- 產生時間：2026-06-25T09:31:57+08:00
 - 交付結果：success
 - 下一狀態：已完成
 
 ## 3. 本次修改內容
 
-已修復價格搜尋頁面 import app.common 失敗之 sys.path 問題，確保在多頁面模式下亦可正常加載。
+修正 price_repository 測試中 load_price_history 的日期依賴問題。新增 reference_date 參數，並在測試中指定固定日期，使 pytest 穩定通過。
 
 ### 修改檔案
 
-- `app/pages/02_price_search.py`
+- `src/data/price_repository.py,tests/test_price_repository.py`
 
 ## 4. 完成標準
 
@@ -31,13 +31,13 @@
 ## 5. 測試方式
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest tests/ -q --basetemp=.tmp_pytest
+.\.venv\Scripts\python.exe -m pytest -q
 ```
 
 ## 6. 測試結果
 
-全體單元測試 42 passed，Streamlit 成功啟動無錯誤。
+60 passed
 
 ## 7. 下一步
 
-無
+已完成測試修復，全數測試通過，無已知問題。

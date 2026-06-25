@@ -6,7 +6,7 @@
 
 ## 2. 這次完成了什麼？
 
-已修復價格搜尋頁面 import app.common 失敗之 sys.path 問題，確保在多頁面模式下亦可正常加載。
+修正 price_repository 測試中 load_price_history 的日期依賴問題。新增 reference_date 參數，並在測試中指定固定日期，使 pytest 穩定通過。
 
 ## 3. 功能流程
 
@@ -29,13 +29,13 @@
 ## 5. 怎麼測試？
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest tests/ -q --basetemp=.tmp_pytest
+.\.venv\Scripts\python.exe -m pytest -q
 ```
 
 ## 6. 預期與實際結果
 
-全體單元測試 42 passed，Streamlit 成功啟動無錯誤。
+60 passed
 
 ## 7. 下一步可以怎麼做？
 
-無
+已完成測試修復，全數測試通過，無已知問題。

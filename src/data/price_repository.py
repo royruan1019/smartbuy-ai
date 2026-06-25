@@ -182,6 +182,7 @@ def load_price_history(
     market_name: str | None = None,
     market_code: str | None = None,
     days: int = 90,
+    reference_date: date | None = None,
 ) -> pd.DataFrame:
     """
     載入指定作物與市場在指定天數內的價格歷史走勢。
@@ -192,11 +193,17 @@ def load_price_history(
         market_name: 市場名稱。
         market_code: 市場代號。
         days: 歷史天數。
+        reference_date: 基準日期。若未提供，則預設為當前系統日期。
 
     回傳:
         pd.DataFrame: 歷史價格走勢，含 attrs["source"] 來源標記。
     """
-    start_date = (datetime.now() - timedelta(days=days)).date()
+    if reference_date is None:
+        reference_date = datetime.now().date()
+    elif isinstance(reference_date, datetime):
+        reference_date = reference_date.date()
+
+    start_date = reference_date - timedelta(days=days)
     database_url = _load_database_url()
     if database_url:
         try:
