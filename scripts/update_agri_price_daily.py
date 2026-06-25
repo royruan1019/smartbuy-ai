@@ -107,10 +107,39 @@ def upsert_agri_prices() -> None:
     """
     抓取農產品交易行情，並以 upsert 寫入 agri_price_daily。
     同時將資料寫入本機 Parquet 歷史儲存層，並清理 Supabase 中超過 3 個月的過期資料。
-
-    判斷依據：
-    trans_date + crop_code + market_code
+    (保留此函式以維持舊有測試相容性，實作改由 run_pipeline 執行)
     """
+    run_pipeline()
+
+
+def run_pipeline() -> None:
+    """
+    行情更新的主管線 (Main Pipeline)。
+    執行順序：
+    1. download R2 parquet (若已配置或為嚴格模式)
+    2. fetch API
+    3. save monthly parquet
+    4. upload R2 parquet (若已配置或為嚴格模式)
+    5. verify R2 upload (若已配置或為嚴格模式)
+    6. upsert Supabase
+    7. prune Supabase old records
+    """
+    from src.data.r2_sync import (
+        download_parquet_from_r2,
+        upload_parquet_to_r2,
+        verify_r2_upload,
+        is_r2_configured,
+        check_r2_strict_mode,
+    )
+
+    # 1. 嚴格模式檢查 (Actions / R2_REQUIRED 下 Secrets 不全直接 Exception)
+    check_r2_strict_mode()
+
+    # 2. 下載 R2 歷史 Parquet
+    if is_r2_configured():
+        download_parquet_from_r2()
+
+    # 3. 讀取 DATABASE_URL
     print("開始讀取 DATABASE_URL...", flush=True)
     database_url = load_database_url(raise_on_missing=False)
     engine = None
@@ -118,8 +147,9 @@ def upsert_agri_prices() -> None:
         print("建立資料庫 engine...", flush=True)
         engine = create_engine(database_url, pool_pre_ping=True)
     else:
-        print("未偵測到 DATABASE_URL，將以離線模式執行（僅寫入 Parquet 檔案）。", flush=True)
+        print("未偵測到 DATABASE_URL，將以離線模式執行。", flush=True)
 
+    # 4. 抓取農業部最新 API 資料
     print("開始抓取農業部農產品交易行情 API...", flush=True)
     df = fetch_agri_prices()
     print(f"API 抓取完成，資料筆數：{len(df)}", flush=True)
@@ -136,12 +166,17 @@ def upsert_agri_prices() -> None:
         print("沒有可寫入資料。")
         return
 
-    # 1. 寫入本機 Parquet 歷史儲存層
+    # 5. 寫入本地 Parquet 合併去重
     print("開始寫入本機 Parquet 歷史資料...", flush=True)
     parquet_saved = save_df_to_monthly_parquet(df)
     print(f"本機 Parquet 歷史資料更新完成，共寫入/更新 {len(df)} 筆資料。", flush=True)
 
-    # 2. 寫入 Supabase 資料庫與清理舊資料
+    # 6. 上傳與驗證至 R2 (若上傳或驗證失敗會直接拋出例外，阻止後續 Supabase 寫入與 pruning)
+    if is_r2_configured():
+        upload_parquet_to_r2()
+        verify_r2_upload()
+
+    # 7. 寫入 Supabase 與 Pruning
     if engine:
         insert_count = 0
         update_count = 0
@@ -230,7 +265,7 @@ def upsert_agri_prices() -> None:
                     if index % 500 == 0:
                         print(f"已處理 {index} 筆資料...", flush=True)
 
-                # 清理 90 天前歷史舊資料
+                # R2 驗證成功後，才 Pruning Supabase 超過 90 天歷史舊資料
                 print("開始清理 Supabase 超過 90 天的歷史資料...", flush=True)
                 prune_result = conn.execute(prune_sql)
                 pruned_rows = prune_result.rowcount
@@ -255,11 +290,10 @@ def upsert_agri_prices() -> None:
                     status="failed",
                     error_message=str(exc),
                 )
-
             raise
     else:
         print("未配置資料庫連線，跳過 Supabase 寫入與歷史清理。", flush=True)
 
 
 if __name__ == "__main__":
-    upsert_agri_prices()
+    run_pipeline()

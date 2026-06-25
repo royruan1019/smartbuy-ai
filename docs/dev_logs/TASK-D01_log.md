@@ -7,24 +7,17 @@
 ## 2. 執行資訊
 
 - 執行者：Antigravity
-- 產生時間：2026-06-23T10:29:31+08:00
+- 產生時間：2026-06-25T10:20:58+08:00
 - 交付結果：success
 - 下一狀態：已完成
 
 ## 3. 本次修改內容
 
-已建立 Parquet 歷史儲存層，降低 Supabase 容量負擔，並支援 ML 訓練資料載入與預測寫回功能。
+實作 Cloudflare R2 Parquet 歷史資料湖雙向同步與驗證。新增 R2 連線與同步工具、CLI 同步工具、整合每日行情更新與歷史回補流程、更新預測導引與 Actions 部署配置，並完成嚴格模式與 pruning 阻斷安全設計。
 
 ### 修改檔案
 
-- `scripts/backfill_agri_price_history.py`
-- `scripts/update_agri_price_daily.py`
-- `src/data/data_loader.py`
-- `src/data/parquet_store.py`
-- `src/data/prediction_store.py`
-- `tests/test_parquet_storage.py`
-- `README.md`
-- `docs/SPEC.md`
+- `requirements.txt,src/data/r2_sync.py,scripts/sync_parquet_r2.py,scripts/update_agri_price_daily.py,scripts/backfill_agri_price_history.py,scripts/generate_baseline_predictions.py,.github/workflows/daily_agri_price_update.yml,docs/r2_parquet_data_lake.md,README.md,docs/SPEC.md,tests/test_r2_sync.py`
 
 ## 4. 完成標準
 
@@ -38,13 +31,13 @@
 ## 5. 測試方式
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest tests/test_parquet_storage.py
+.\.venv\Scripts\python.exe -m pytest -q
 ```
 
 ## 6. 測試結果
 
-單元測試 4 passed，專案全體測試 38 passed；手動回補與 daily update 腳本成功產生 parquet 檔案，且可用 pandas 正常讀回。
+70 passed
 
 ## 7. 下一步
 
-無
+已完成 Cloudflare R2 歷史資料湖串接，後續可在 Actions 中配置 Secrets 啟用 R2 同步功能。

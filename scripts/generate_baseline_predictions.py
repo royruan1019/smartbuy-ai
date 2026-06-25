@@ -93,6 +93,14 @@ def get_history_and_metadata(crop_code: str, market_code: str) -> tuple[pd.DataF
 
 
 def main() -> int:
+    # 檢查本地歷史 Parquet 目錄狀態並給予 R2 下載指引
+    from src.data.r2_sync import LOCAL_PARQUET_DIR
+    if not LOCAL_PARQUET_DIR.exists() or not list(LOCAL_PARQUET_DIR.glob("*.parquet")):
+        print("【提示】本地未偵測到任何 Parquet 歷史行情檔案。")
+        print("如果是獨立執行預測任務，請先執行以下指令自 Cloudflare R2 下載最新歷史資料：")
+        print("  python scripts/sync_parquet_r2.py download")
+        print("如果是在 GitHub Actions workflow 流程中執行，請確保更新流程已在先前步驟中下載並合併 Parquet。\n")
+
     parser = argparse.ArgumentParser(description="產生 Baseline 行情預測")
     parser.add_argument("--crop-code", type=str, help="作物代碼")
     parser.add_argument("--market-code", type=str, help="市場代碼")

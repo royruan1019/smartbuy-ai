@@ -37,9 +37,10 @@
   - **前台精準對齊**: 搜尋頁展示預測結果時，優先使用目前查詢結果的 `crop_code + market_code` 進行精準匹配；若代碼不足或無資料，再 fallback 使用 `crop_name + market_name` 比對，防止不同產地或品項的預測資料混用。
 
 
-### 2. Parquet 本機儲存層 (ML 數據湖)
-- **儲存目錄**: `data/history_parquet/`。
-- **命名規範**: `agri_price_YYYY-MM.parquet`（按年份與月份分區儲存）。
+### 2. Parquet 儲存層與 Cloudflare R2 資料湖
+- **儲存與命名**: 本地 `data/history_parquet/` 下以 `agri_price_YYYY-MM.parquet` 命名規範（按年份與月份分區儲存）儲存歷史資料。
+- **Cloudflare R2 同步**: 行情更新時，將自動與 Cloudflare R2 儲存桶進行下載、上傳與上傳後 `head_object` 檔案大小驗證。
+- **嚴格模式與 Pruning 防禦**: 當在 GitHub Actions (GITHUB_ACTIONS=true) 或 R2_REQUIRED=true 時，Secrets 缺漏將直接拋出例外失敗退出。R2 上傳或驗證失敗時，中斷程式且不得執行 Supabase pruning 刪除歷史資料，防範資料流失。
 - **去重邏輯**: 以 `['trans_date', 'crop_code', 'market_code']` 為主鍵進行 UPSERT 式覆寫去重。
 - **ML 載入**: 訓練時應優先呼叫 `src/data/data_loader.py` 中的 `load_historical_prices_for_ml(start, end)` 載入數據湖資料，嚴禁在大範圍訓練時直接大量 Query Supabase。
 

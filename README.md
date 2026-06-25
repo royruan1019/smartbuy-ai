@@ -40,9 +40,10 @@ pytest -q
    - **前台展示對齊**: 在搜尋價格頁中，優先依據作物代碼與市場代碼 (`crop_code` & `market_code`) 進行精準比對以讀取預測資料，代碼缺失時再使用名稱 (`crop_name` & `market_name`) 進行降級比對，避免不同市場或作物的預測資料混淆。
    - **多卡片呈現**: 展示未來 5 天的預測價格與漲跌趨勢狀態（便宜、正常、偏貴），無資料時顯示「目前尚無該品項的未來價格預測資料」以防崩潰。
 
-2. **本機 Parquet 檔案 (ML 數據湖 - Data Lake)**:
+2. **Cloudflare R2 Parquet 歷史資料湖 (ML 數據湖 - Data Lake)**:
    - **定位**: 專為機器學習模型訓練提供的高壓縮比、欄位導向 (Column-oriented) 歷史數據儲存層。
-   - **儲存路徑**: 儲存於 `data/history_parquet/` 目錄下，檔名為 `agri_price_YYYY-MM.parquet` 的按月分割檔案。
+   - **雙向同步與持久化**: 由於 GitHub Actions runner 為暫時機器，歷史資料湖 Parquet 檔案（按月分割，儲存於 `data/history_parquet/`）會雙向同步至 Cloudflare R2 儲存桶。每次行情更新前會自動從 R2 下載既有 Parquet 檔，合併新行情後再上傳更新至 R2 並進行完整性大小驗證。
+   - **安全阻斷**: 僅在 Parquet 上傳 R2 成功且驗證通過後，才允許執行 Supabase 90 天前的舊資料 Pruning，確保歷史行情資料安全。
    - **ML 訓練載入方式**: 模型訓練時，應優先讀取 Parquet 數據湖（呼叫 `load_historical_prices_for_ml()` 函式），而不是大量查詢 Supabase 資料庫，避免造成雲端資料庫負擔與限制瓶頸。
    - **預測結果**: 模型預測完成後，將結果寫回 Supabase 的 `prediction_results` 資料表中以供前台顯示。
 

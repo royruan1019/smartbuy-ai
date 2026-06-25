@@ -6,7 +6,7 @@
 
 ## 2. 這次完成了什麼？
 
-已建立 Parquet 歷史儲存層，降低 Supabase 容量負擔，並支援 ML 訓練資料載入與預測寫回功能。
+實作 Cloudflare R2 Parquet 歷史資料湖雙向同步與驗證。新增 R2 連線與同步工具、CLI 同步工具、整合每日行情更新與歷史回補流程、更新預測導引與 Actions 部署配置，並完成嚴格模式與 pruning 阻斷安全設計。
 
 ## 3. 功能流程
 
@@ -31,13 +31,13 @@
 ## 5. 怎麼測試？
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest tests/test_parquet_storage.py
+.\.venv\Scripts\python.exe -m pytest -q
 ```
 
 ## 6. 預期與實際結果
 
-單元測試 4 passed，專案全體測試 38 passed；手動回補與 daily update 腳本成功產生 parquet 檔案，且可用 pandas 正常讀回。
+70 passed
 
 ## 7. 下一步可以怎麼做？
 
-無
+已完成 Cloudflare R2 歷史資料湖串接，後續可在 Actions 中配置 Secrets 啟用 R2 同步功能。

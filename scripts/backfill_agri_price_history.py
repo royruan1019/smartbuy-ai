@@ -215,6 +215,21 @@ def backfill_history(
     chunk_days 建議先用 1 或 2。
     政府 API 偶爾會 timeout，區間越小越穩。
     """
+    from src.data.r2_sync import (
+        download_parquet_from_r2,
+        upload_parquet_to_r2,
+        verify_r2_upload,
+        is_r2_configured,
+        check_r2_strict_mode,
+    )
+
+    # 1. 嚴格模式安全檢查
+    check_r2_strict_mode()
+
+    # 2. 下載 R2 歷史 Parquet
+    if mode in ("parquet", "both") and is_r2_configured():
+        download_parquet_from_r2()
+
     # 根據 mode 載入資料庫 URL。若為 parquet 模式，資料庫 URL 遺失時不報錯（offline 模式）。
     database_url = None
     engine = None
@@ -329,6 +344,11 @@ def backfill_history(
 
         current_start = current_end + timedelta(days=1)
         time.sleep(sleep_seconds)
+
+    # 3. 歷史回補完成後，將 Parquet 上傳回 R2 並驗證
+    if mode in ("parquet", "both") and is_r2_configured():
+        upload_parquet_to_r2()
+        verify_r2_upload()
 
     print("=" * 60, flush=True)
     print("歷史資料回補完成。", flush=True)
