@@ -24,8 +24,11 @@ _price_cache: dict = {}
 
 @asynccontextmanager
 async def lifespan(app):
-    # 啟動時預載 30 天價格資料，避免第一次 request 才查 DB
-    _price_cache["prices"] = load_price_history(days=30)
+    # 啟動時預載：查一次 DB、算好所有品項狀態，request 進來直接回傳
+    prices = load_price_history(days=30)
+    _price_cache["prices"] = prices
+    _price_cache["all_statuses"] = get_all_price_statuses(prices=prices)
+    _price_cache["recommendations"] = get_bargain_recommendations(prices=prices)
     yield
     _price_cache.clear()
 
@@ -51,7 +54,7 @@ app.add_middleware(
 @app.get("/api/home")
 def home():
     typhoon = get_typhoon_alert()
-    recommendations = get_bargain_recommendations(prices=_price_cache.get("prices"))
+    recommendations = _price_cache.get("recommendations") or get_bargain_recommendations()
     # 取前三品項的天氣風險
     weather_alerts = []
     seen: set[str] = set()
@@ -74,7 +77,7 @@ def home():
 
 @app.get("/api/products")
 def list_products(q: str = Query(default="")):
-    all_statuses = get_all_price_statuses(prices=_price_cache.get("prices"))
+    all_statuses = _price_cache.get("all_statuses") or get_all_price_statuses()
     if q.strip():
         all_statuses = [s for s in all_statuses if q.strip() in s["product_name"]]
     return all_statuses
