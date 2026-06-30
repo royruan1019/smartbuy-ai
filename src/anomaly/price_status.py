@@ -22,6 +22,13 @@ STATUS_SUGGESTIONS = {
 }
 
 
+def _safe_round(value, ndigits: int = 1):
+    """數值若為 None/NaN 則回傳 None，否則四捨五入。"""
+    if value is None or pd.isna(value):
+        return None
+    return round(float(value), ndigits)
+
+
 def get_price_status(
     product_name: str,
     market_name: str | None = None,
@@ -39,11 +46,18 @@ def get_price_status(
             "status": "資料不足",
             "reason": "目前沒有這個品項的行情資料",
             "suggestion": STATUS_SUGGESTIONS["資料不足"],
+            "recent_average": None,
+            "trans_date": None,
+            "upper_price": None,
+            "middle_price": None,
+            "lower_price": None,
+            "volume": None,
         }
 
     selected = selected.sort_values("trans_date")
     result = detect_price_status(selected["avg_price"])
-    market = str(selected.iloc[-1]["market_name"])
+    latest = selected.iloc[-1]
+    market = str(latest["market_name"])
     reason = {
         "偏貴": "今天價格明顯高於近期平均",
         "便宜": "今天價格明顯低於近期平均",
@@ -58,10 +72,20 @@ def get_price_status(
         "reason": reason,
         "suggestion": STATUS_SUGGESTIONS[result.status],
         "recent_average": round(result.mean_price, 1) if result.mean_price is not None else None,
+        "trans_date": str(latest["trans_date"]) if latest.get("trans_date") is not None else None,
+        "upper_price": _safe_round(latest.get("upper_price")),
+        "middle_price": _safe_round(latest.get("middle_price")),
+        "lower_price": _safe_round(latest.get("lower_price")),
+        "volume": _safe_round(latest.get("volume"), 0),
     }
 
 
-def get_all_price_statuses(prices: pd.DataFrame | None = None) -> list[dict]:
+def get_all_price_statuses(
+    prices: pd.DataFrame | None = None,
+    market_name: str | None = None,
+) -> list[dict]:
     data = load_price_history(days=30) if prices is None else prices.copy()
+    if market_name:
+        data = data[data["market_name"] == market_name]
     return [get_price_status(name, prices=data) for name in sorted(data["product_name"].unique())]
 

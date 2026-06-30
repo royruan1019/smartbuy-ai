@@ -76,17 +76,29 @@ def home():
 
 # ── 菜價搜尋 ──────────────────────────────────────────────────────────────────
 
+@app.get("/api/markets")
+def list_markets():
+    prices = _price_cache.get("prices")
+    if prices is None:
+        prices = load_price_history(days=30)
+    markets = sorted(prices["market_name"].dropna().unique().tolist())
+    return {"markets": markets}
+
+
 @app.get("/api/products")
-def list_products(q: str = Query(default="")):
-    all_statuses = _price_cache.get("all_statuses") or get_all_price_statuses()
+def list_products(q: str = Query(default=""), market: str = Query(default="")):
+    if market:
+        all_statuses = get_all_price_statuses(prices=_price_cache.get("prices"), market_name=market)
+    else:
+        all_statuses = _price_cache.get("all_statuses") or get_all_price_statuses()
     if q.strip():
         all_statuses = [s for s in all_statuses if q.strip() in s["product_name"]]
     return all_statuses
 
 
 @app.get("/api/products/{name}")
-def get_product_detail(name: str):
-    result = get_purchase_advice(name)
+def get_product_detail(name: str, market: str = Query(default="")):
+    result = get_purchase_advice(name, market_name=market or None)
     if result["price_detail"]["status"] == "資料不足" and not result["today_price"]:
         raise HTTPException(status_code=404, detail="查無此品項資料")
     return result
